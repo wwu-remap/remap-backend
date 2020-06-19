@@ -7,7 +7,7 @@ bin:
 
 build: bin/remap-server
 
-bin/remap-server: | bin
+bin/remap-server: main.go | bin
 	@go build -o $@
 
 clean:
