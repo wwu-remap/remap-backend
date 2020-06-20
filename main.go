@@ -81,6 +81,7 @@ func main() {
 		if r.Method != http.MethodPost {
 			log.Println("Bad request from", r.RemoteAddr)
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, "Wrong method")
 			return
 		}
 
