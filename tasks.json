@@ -1,0 +1,27 @@
+// example task
+[
+    {
+        "type": "custom",
+        "android": true,
+        "isActive": false, 
+        "name": "Stimmung", 
+        "identifier": "mood",
+        "notificationInfo": {"message": "Bitte beantworten Sie Fragen zu Ihrer Stimmung.", "schedule": 7, "variance": 2, "followUps": 1, "notificationId": 8746}, 
+        "steps": [
+            {
+                "type": "question",
+                "identifier": "moodToday", 
+                "title": "Wie ist Ihre Stimmung heute? ",
+                "question": "(1='sehr schlecht', 10='sehr gut')", 
+                "answer": {
+                    "answerFormat": "scale", 
+                    "minimumValue": 1, 
+                    "maximumValue": 10, 
+                    "step": 1}
+            },
+            {
+                "type": "completion"
+            }
+        ]
+    }
+]

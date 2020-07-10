@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/gridfs"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/gridfs"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 func auth(w http.ResponseWriter, r *http.Request, apiKey string, authColl *mongo.Collection) (string, bool) {
@@ -73,7 +74,7 @@ func main() {
 		log.Printf("Could not connect to mongodb:", err)
 		return
 	}
-	Db := client.Database("remap")
+	Db := client.Database("remap_dev")
 	authColl := Db.Collection("auth")
 	eventsColl := Db.Collection("events")
 
@@ -164,6 +165,39 @@ func main() {
 		fmt.Fprintf(w, "Success")
 	})
 
+	http.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			log.Println("Bad request from", r.RemoteAddr)
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, "Wrong method")
+			return
+		}
+
+		_, ok := auth(w, r, apiKey, authColl)
+		if !ok {
+			return
+		}
+
+		body, err := loadTasks()
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(body)
+
+	})
+
 	log.Println("Listening on", listenAddr, "...")
-	http.ListenAndServe(listenAddr, nil)
+	log.Fatal(http.ListenAndServe(listenAddr, nil))
+}
+
+func loadTasks() ([]byte, error) {
+	filename := "tasks.json"
+	body, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
 }
