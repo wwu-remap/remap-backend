@@ -53,14 +53,15 @@ func auth(w http.ResponseWriter, r *http.Request, apiKey string, authColl *mongo
 }
 
 func main() {
-	if len(os.Args[1:]) != 3 {
+	if len(os.Args[1:]) != 4 {
 		fmt.Printf("Usage: %s LISTEN_ADDR MONGODB_ADDR API_KEY\n", os.Args[0])
 		return
 	}
 
 	listenAddr := os.Args[1]
 	mongodbAddr := os.Args[2]
-	apiKey := os.Args[3]
+	mongodbName := os.Args[3]
+	apiKey := os.Args[4]
 
 	log.Println("Connecting to MongoDB at", mongodbAddr)
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -74,7 +75,7 @@ func main() {
 		log.Printf("Could not connect to mongodb:", err)
 		return
 	}
-	Db := client.Database("remap_dev")
+	Db := client.Database(mongodbName)
 	authColl := Db.Collection("auth")
 	eventsColl := Db.Collection("events")
 
