@@ -62,15 +62,17 @@ func main() {
 	apiKey := os.Args[3]
 
 	log.Println("Connecting to MongoDB at", mongodbAddr)
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongodbAddr))
 	if err != nil {
-		log.Printf("Could not connect to mongodb:", err)
+		log.Println("Could not connect to mongodb:", err)
 		return
 	}
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
-		log.Printf("Could not connect to mongodb:", err)
+		log.Println("Could not connect to mongodb:", err)
 		return
 	}
 	Db := client.Database("remap")
@@ -100,7 +102,7 @@ func main() {
 		if err != nil {
 			log.Println("Could not read data for user", username, ":", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "Could not read data:", err)
+			fmt.Fprint(w, "Could not read data:", err)
 			return
 		}
 
@@ -109,7 +111,7 @@ func main() {
 		if err != nil {
 			log.Println("Could not parse event for user", username, ":", err)
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "Could not parse data:", err)
+			fmt.Fprint(w, "Could not parse data:", err)
 			return
 		}
 
@@ -117,7 +119,7 @@ func main() {
 		if err != nil {
 			log.Println("Could not insert event for user", username, ":", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "Could not insert event:", err)
+			fmt.Fprint(w, "Could not insert event:", err)
 			return
 		}
 
@@ -148,7 +150,7 @@ func main() {
 		if err != nil {
 			log.Println("Could not create bucket for user", username, ":", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "Could not create bucket:", err)
+			fmt.Fprint(w, "Could not create bucket:", err)
 			return
 		}
 
@@ -157,7 +159,7 @@ func main() {
 		if err != nil {
 			log.Println("Could not upload stream for user", username, ":", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "Could not upload stream:", err)
+			fmt.Fprint(w, "Could not upload stream:", err)
 			return
 		}
 
