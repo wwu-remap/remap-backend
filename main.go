@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/gridfs"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/gridfs"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 func auth(w http.ResponseWriter, r *http.Request, apiKey string, authColl *mongo.Collection) (string, bool) {
@@ -52,14 +53,15 @@ func auth(w http.ResponseWriter, r *http.Request, apiKey string, authColl *mongo
 }
 
 func main() {
-	if len(os.Args[1:]) != 3 {
+	if len(os.Args[1:]) != 4 {
 		fmt.Printf("Usage: %s LISTEN_ADDR MONGODB_ADDR API_KEY\n", os.Args[0])
 		return
 	}
 
 	listenAddr := os.Args[1]
 	mongodbAddr := os.Args[2]
-	apiKey := os.Args[3]
+	mongodbName := os.Args[3]
+	apiKey := os.Args[4]
 
 	log.Println("Connecting to MongoDB at", mongodbAddr)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -75,7 +77,7 @@ func main() {
 		log.Println("Could not connect to mongodb:", err)
 		return
 	}
-	Db := client.Database("remap")
+	Db := client.Database(mongodbName)
 	authColl := Db.Collection("auth")
 	eventsColl := Db.Collection("events")
 
@@ -166,6 +168,47 @@ func main() {
 		fmt.Fprintf(w, "Success")
 	})
 
+	http.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			log.Println("Bad request from", r.RemoteAddr)
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, "Wrong method")
+			return
+		}
+
+		_, ok := auth(w, r, apiKey, authColl)
+		if !ok {
+			return
+		}
+
+		body, err := loadTasks()
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(w, "[]")
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(body)
+
+	})
+
 	log.Println("Listening on", listenAddr, "...")
-	http.ListenAndServe(listenAddr, nil)
+	log.Fatal(http.ListenAndServe(listenAddr, nil))
+}
+
+func loadTasks() ([]byte, error) {
+	filename := "example/tasks.json"
+
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		// filename does not exist
+		return nil, err
+	}
+
+	body, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
