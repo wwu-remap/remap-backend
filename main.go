@@ -182,6 +182,7 @@ func main() {
 		body, err := loadTasks()
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("[]"))
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -195,7 +196,7 @@ func main() {
 }
 
 func loadTasks() ([]byte, error) {
-	filename := "tasks.json"
+	filename := "example/tasks.json"
 
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		// filename does not exist
