@@ -195,9 +195,16 @@ func main() {
 
 func loadTasks() ([]byte, error) {
 	filename := "tasks.json"
+
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		// filename does not exist
+		return nil, err
+	}
+
 	body, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
+
 	return body, nil
 }
