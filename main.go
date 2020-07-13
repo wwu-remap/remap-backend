@@ -182,7 +182,7 @@ func main() {
 		body, err := loadTasks()
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("[]"))
+			fmt.Fprint(w, "[]")
 		}
 
 		w.Header().Set("Content-Type", "application/json")
