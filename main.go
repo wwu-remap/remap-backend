@@ -80,6 +80,7 @@ func main() {
 	Db := client.Database(mongodbName)
 	authColl := Db.Collection("auth")
 	eventsColl := Db.Collection("events")
+	tasksColl := Db.Collection("tasks")
 
 	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -181,34 +182,27 @@ func main() {
 			return
 		}
 
-		body, err := loadTasks()
+		res, err := tasksColl.Find(r.Context(), bson.M{})
 		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprint(w, "[]")
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		bytes, err := bson.MarshalExtJSON(res.Current, true, true)
+		if err != nil {
+			log.Println("Could not enocde tasks:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "Could not encode tasks:", err)
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
-		w.Write(body)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(bytes)
 
 	})
 
 	log.Println("Listening on", listenAddr, "...")
 	log.Fatal(http.ListenAndServe(listenAddr, nil))
-}
-
-func loadTasks() ([]byte, error) {
-	filename := "example/tasks.json"
-
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		// filename does not exist
-		return nil, err
-	}
-
-	body, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
 }
