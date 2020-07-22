@@ -20,7 +20,7 @@ func auth(w http.ResponseWriter, r *http.Request, apiKey string, authColl *mongo
 	if r.Header.Get("x-api-key") != apiKey {
 		log.Println("Bad x-api-key from", r.RemoteAddr)
 		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintf(w, "Wrong API key")
+		fmt.Fprintf(w, "Wrong credentials")
 		return "", false
 	}
 	username, password, ok := r.BasicAuth()
@@ -39,13 +39,13 @@ func auth(w http.ResponseWriter, r *http.Request, apiKey string, authColl *mongo
 	if err != nil {
 		log.Println("User", username, "not found from", r.RemoteAddr, ":", err)
 		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintf(w, "Unknown username")
+		fmt.Fprintf(w, "Wrong credentials")
 		return "", false
 	}
 	if result.Password != password {
 		log.Println("Wrong password for user", username, "from", r.RemoteAddr)
 		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintf(w, "Wrong password")
+		fmt.Fprintf(w, "Wrong credentials")
 		return "", false
 	}
 
