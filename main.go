@@ -185,14 +185,11 @@ func main() {
 
 		// Parse request parameters
 		filterMap := bson.M{}
-		for k, v := range r.URL.Query() {
+		for k := range r.URL.Query() {
 			if k == "ios" || k == "android" {
 				filterMap[k] = true
 			}
-			fmt.Printf("%s: %s\n", k, v)
 		}
-
-		fmt.Println(filterMap)
 
 		// Find tasks in mongodb
 		findOptions := options.Find().SetProjection(bson.M{"_id": 0})
