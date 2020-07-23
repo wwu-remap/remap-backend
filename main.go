@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -78,9 +79,9 @@ func main() {
 		return
 	}
 	Db := client.Database(mongodbName)
-	authColl := Db.Collection("auth")
-	eventsColl := Db.Collection("events")
-	tasksColl := Db.Collection("tasks")
+	authCollection := Db.Collection("auth")
+	eventsCollection := Db.Collection("events")
+	tasksCollection := Db.Collection("tasks")
 
 	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -90,7 +91,7 @@ func main() {
 			return
 		}
 
-		username, ok := auth(w, r, apiKey, authColl)
+		username, ok := auth(w, r, apiKey, authCollection)
 		if !ok {
 			return
 		}
@@ -118,7 +119,7 @@ func main() {
 			return
 		}
 
-		_, err = eventsColl.InsertOne(r.Context(), bson.M{"subjectId": username, "createdDate": time.Now(), "data": data})
+		_, err = eventsCollection.InsertOne(r.Context(), bson.M{"subjectId": username, "createdDate": time.Now(), "data": data})
 		if err != nil {
 			log.Println("Could not insert event for user", username, ":", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -137,7 +138,7 @@ func main() {
 			return
 		}
 
-		username, ok := auth(w, r, apiKey, authColl)
+		username, ok := auth(w, r, apiKey, authCollection)
 		if !ok {
 			return
 		}
@@ -177,19 +178,39 @@ func main() {
 			return
 		}
 
-		_, ok := auth(w, r, apiKey, authColl)
+		_, ok := auth(w, r, apiKey, authCollection)
 		if !ok {
 			return
 		}
 
-		res, err := tasksColl.Find(r.Context(), bson.M{})
+		// Parse request parameters
+		filterMap := bson.M{}
+		for k, v := range r.URL.Query() {
+			if k == "ios" || k == "android" {
+				filterMap[k] = true
+			}
+			fmt.Printf("%s: %s\n", k, v)
+		}
+
+		fmt.Println(filterMap)
+
+		// Find tasks in mongodb
+		findOptions := options.Find().SetProjection(bson.M{"_id": 0})
+		cur, err := tasksCollection.Find(r.Context(), filterMap, findOptions)
 		if err != nil {
 			w.WriteHeader(http.StatusOK)
 			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprint(w, "[]")
 		}
 
-		bytes, err := bson.MarshalExtJSON(res.Current, true, true)
+		// Load all from result
+		var results []bson.M
+		if err = cur.All(r.Context(), &results); err != nil {
+			log.Fatal(err)
+		}
+
+		// Convert to bytes
+		bytes, err := json.Marshal(results)
 		if err != nil {
 			log.Println("Could not enocde tasks:", err)
 			w.WriteHeader(http.StatusInternalServerError)
