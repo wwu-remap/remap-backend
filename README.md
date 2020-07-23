@@ -57,10 +57,6 @@ curl --location --request POST '192.168.11.8:8080/upload' \
 --data-binary '@/path/to/your/audiofile.m4a'
 ```
 
-## Built With
-
-* [Maven](https://maven.apache.org/) - Dependency Management
-
 ## Contributing
 
 Please contact me if you want to contribute.
@@ -68,7 +64,6 @@ Please contact me if you want to contribute.
 ## Authors
 
 * **Daniel Emden** - *Initial work* - [danielemden](https://github.com/danielemden)
-* **Sven Willner** - *Initial work* - [swillner](https://github.com/swillner)
 
 ## License
 
