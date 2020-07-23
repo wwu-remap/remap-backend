@@ -71,4 +71,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* @swillner for helping me writing the POC
+* [Sven Willner](https://github.com/swillner) for helping me writing the POC
