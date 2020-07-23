@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -207,7 +206,7 @@ func main() {
 		}
 
 		// Convert to bytes
-		bytes, err := json.Marshal(results)
+		bytes, err := bson.MarshalExtJSON(bson.M{"array": results}, true, true)
 		if err != nil {
 			log.Println("Could not enocde tasks:", err)
 			w.WriteHeader(http.StatusInternalServerError)
