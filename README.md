@@ -57,18 +57,6 @@ curl --location --request POST '192.168.11.8:8080/upload' \
 --data-binary '@/path/to/your/audiofile.m4a'
 ```
 
-## Contributing
-
-Please contact me if you want to contribute.
-
-## Authors
-
-* **Daniel Emden** - *Initial work* - [danielemden](https://github.com/danielemden)
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
 ## Acknowledgments
 
 * [Sven Willner](https://github.com/swillner) for helping me writing the POC
